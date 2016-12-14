@@ -42,31 +42,37 @@ cc.Class({
 
     properties: {
         ["bianchanggezishu"]: 5,
+        //六边形的高
         ["liubianxingH"]: 0,
+        //六边形的
         ["liubianxingA"]: 0,
-        ["framePic"]:{
+        ["framePic"]: {
             default: null,
             type: cc.SpriteFrame,
         },
-        ["bian"]:{
+        //边
+        ["bian"]: {
             default: null,
             type: cc.SpriteFrame,
         },
-
-        xiaochuSound:{
+        //消除声音资源
+        xiaochuSound: {
             default: null,
             url: cc.AudioClip,
         },
 
-        shuPrefab:{
+        //预制资源
+        shuPrefab: {
             default: null,
             type: cc.Prefab,
         },
-        boomEffPrefab:{
+        //预制资源
+        boomEffPrefab: {
             default: null,
             type: cc.Prefab,
         },
-        tipPrefab:{
+        //提示预制资源
+        tipPrefab: {
             default: null,
             type: cc.Prefab,
         },
@@ -79,7 +85,7 @@ cc.Class({
      * @param  {[type]}
      * @return {[type]}
      */
-    checkXC: function(argument) {
+    checkXC: function (argument) {
         Util.testCode1('消除逻辑')
 
         //放下都加分
@@ -91,16 +97,17 @@ cc.Class({
         label.string = "+" + this.getAddScoreCal(this.curFKLen, true)
         this.node.addChild(tipNode)
 
-        var haveFKIndexList = []
+        var haveFKIndexList = [] //方块下表集合
         for (var i = 0; i < this.frameList.length; i++) {
-            if(this.frameList[i].isHaveFK){
+            if (this.frameList[i].isHaveFK) { //当前的下标中是否有方块
                 //cc.log(this.frameList[i].FKIndex)
-                haveFKIndexList.push(this.frameList[i].FKIndex)
+                haveFKIndexList.push(this.frameList[i].FKIndex) //如果有就存储
             }
-            
+
         }
 
-        haveFKIndexList.sort(function(a, b){return a - b})
+        //重新排序
+        haveFKIndexList.sort(function (a, b) { return a - b })
 
         //cc.log("haveFKIndexList：", haveFKIndexList.toString())
 
@@ -110,14 +117,14 @@ cc.Class({
             var intersectAry = this.get2AryIntersect(haveFKIndexList, oneXCList)
 
 
-            if(intersectAry.length > 0){
+            if (intersectAry.length > 0) {
                 //cc.log("intersectAry:", intersectAry.toString())
                 //cc.log("oneXCList:", oneXCList.toString())
 
                 var isXC = this.check2AryIsEqual(oneXCList, intersectAry)
 
                 //cc.log("intersectAry 和 oneXCList是否相等：", isXC)
-                if(isXC){
+                if (isXC) {
                     cc.log("消！！")
                     xcList.push(oneXCList)
 
@@ -127,7 +134,7 @@ cc.Class({
         }
 
         //cc.log("消除表现！！")
-        
+
         var actionAry = []
         var self = this
         //消除
@@ -138,7 +145,7 @@ cc.Class({
             for (var j = 0; j < oneList.length; j++) {
                 var xIndex = oneList[j]
 
-                actionAry.push(cc.callFunc(function(){
+                actionAry.push(cc.callFunc(function () {
                     var xIndex = arguments[1][0]
                     var count = arguments[1][1]
                     var effNode = cc.instantiate(this.boomEffPrefab)
@@ -152,7 +159,7 @@ cc.Class({
                 }, this, [xIndex, count]))
 
 
-                actionAry.push(cc.callFunc(function(){
+                actionAry.push(cc.callFunc(function () {
                     var xIndex = arguments[1]
                     this.frameList[xIndex].isHaveFK = null
 
@@ -168,18 +175,18 @@ cc.Class({
                         cc.spawn(cc.scaleTo(0.5, 2), cc.fadeOut(0.5)),
                         cc.removeSelf(true)
                     ))
-                    
+
                 }, this, xIndex))
 
                 actionAry.push(cc.delayTime(0.1))
 
                 count++
             }
-            
+
         }
 
         if (actionAry.length > 0) {
-            actionAry.push(cc.callFunc(function(){
+            actionAry.push(cc.callFunc(function () {
                 this.isDeleting = false
                 this.checkIsLose()
             }, this))
@@ -191,52 +198,51 @@ cc.Class({
             //加分
             this.addScore(count)
         }
-        
+
 
 
         Util.testCode2('消除逻辑')
 
-        
+
     },
 
     //检测是不是输了
-    checkIsLose: function() {
+    checkIsLose: function () {
         //如果正在消除中，那就不判断输赢，因为消除后会再判断
         if (this.isDeleting) return
 
         var count = 0
         for (var i = 0; i < 3; i++) {
-            var node = cc.find('Canvas/getNewFK' + (i + 1))
-            var script = node.getComponent('NewLBXKuai')
-            if(script.checkIsLose()){
-                
+            var node = cc.find('Canvas/getNewFK' + (i + 1)) //获取到下方那随机出现的方块
+            var script = node.getComponent('NewLBXKuai')  //方块的交互
+            if (script.checkIsLose()) {  //是否还可以放置
+
                 //cc.log("方块" + (i + 1) + "已经无处安放")
                 count++
-                node.opacity = 125
+                node.opacity = 125  //变暗  用于潜在的提示用户，该资源不能再放置了，因为没有位置提供给他
             }
-            else{
-
+            else {
                 //cc.log("方块" + (i + 1) + "可以安放")
-                node.opacity = 255
+                node.opacity = 255  //透明度
             }
-            
+
         }
 
-        if (count == 3) {
-            var shuNode = cc.instantiate(this.shuPrefab)
-            this.node.parent.addChild(shuNode)
+        if (count == 3) {  //如果是判断到了第三个，而且还没有找到能放置的地方，代表着这局输了，那么就执行保存分数逻辑
+            var shuNode = cc.instantiate(this.shuPrefab)  //找到结束的预制资源
+            this.node.parent.addChild(shuNode)  //父节点添加这个孩子节点
 
-            cc.log("保存历史最高分")
-            var oldScore = cc.sys.localStorage.getItem("score")
-            if (oldScore < theScore) {
-                cc.sys.localStorage.setItem("score", theScore)
+            cc.log("保存历史最高分") //以下是保存最高分逻辑，如果当前分数是最高分  那么就更新本地数据库中保存的分数
+            var oldScore = cc.sys.localStorage.getItem("score")  //获取到本地数据库保存的最高分记录
+            if (oldScore < theScore) { //笔记两个分数
+                cc.sys.localStorage.setItem("score", theScore)  //比较后得到最高分保存到本地
             }
         }
 
     },
 
     //加分，参数是消除的总数,isDropAdd是是否是放下的单纯加分
-    addScore: function(XCCount, isDropAdd) {
+    addScore: function (XCCount, isDropAdd) {
         var addScoreCount = this.getAddScoreCal(XCCount, isDropAdd)
         var node = cc.find('Canvas/score/scoreLabel')
         var label = node.getComponent(cc.Label)
@@ -246,25 +252,24 @@ cc.Class({
     },
 
     //计算加分的公式
-    getAddScoreCal: function(XCCount, isDropAdd) {
+    getAddScoreCal: function (XCCount, isDropAdd) {
         var x = XCCount + 1
-        var addScoreCount = isDropAdd ? x : 2 * x * x//数量的平方
+        var addScoreCount = isDropAdd ? x : 2 * x * x//数量的平方  //如果是消除  则得分比较高  如果是放置，并没有触发消除，则得分是放置的方块数+1
         return addScoreCount
     },
 
 
 
     //获得两个数组的交集
-    get2AryIntersect: function(ary1, ary2) {
+    get2AryIntersect: function (ary1, ary2) {
         var intersectAry = []
         for (var i = 0; i < ary1.length; i++) {
             for (var j = 0; j < ary2.length; j++) {
-                if(ary2[j] == ary1[i]){
+                if (ary2[j] == ary1[i]) {
                     intersectAry.push(ary2[j])
                 }
             }
         }
-
         return intersectAry
     },
 
@@ -275,13 +280,12 @@ cc.Class({
      * @param  {array}数组2
      * @return {boolean}是否相交
      */
-    check2AryIsEqual: function(ary1, ary2) {
+    check2AryIsEqual: function (ary1, ary2) {
         for (var i = 0; i < ary1.length; i++) {
-            if(ary2[i] != ary1[i]){
+            if (ary2[i] != ary1[i]) {
                 return false
             }
         }
-
         return true
     },
 
@@ -293,98 +297,101 @@ cc.Class({
         var lbxNodesIndex = 0
         var maxCount = this["bianchanggezishu"] * 2 - 1
 
-        
+
         //位置表
         var posList = [
             //第一行的位置信息
             {
-                count: 5, 
+                count: 5,
                 srcPos: cc.p(0, 0)
             },
-            
+
             //第二行的位置信息
             {
-                count: 6, 
+                count: 6,
                 srcPos: cc.p(2 * this["liubianxingH"], 0)
             },
-            
+
             //第三行的位置信息
             {
-                count: 7, 
+                count: 7,
                 srcPos: cc.p(2 * this["liubianxingH"] * 2, 0)
             },
-            
+
             //第四行的位置信息
             {
-                count: 8, 
+                count: 8,
                 srcPos: cc.p(2 * this["liubianxingH"] * 3, 0)
             },
-            
+
             //第五行的位置信息
             {
-                count: 9, 
+                count: 9,
                 srcPos: cc.p(2 * this["liubianxingH"] * 4, 0)
             },
-            
+
             //第六行的位置信息
             {
-                count: 8, 
+                count: 8,
                 srcPos: cc.p(2 * this["liubianxingH"] * 4 + this["liubianxingH"], (-3 * this["liubianxingA"]) / 2)
             },
-            
+
             //第七行的位置信息
             {
-                count: 7, 
+                count: 7,
                 srcPos: cc.p(2 * this["liubianxingH"] * 4 + this["liubianxingH"] * 2, (-3 * this["liubianxingA"] * 2) / 2)
             },
-            
+
             //第八行的位置信息
             {
-                count: 6, 
+                count: 6,
                 srcPos: cc.p(2 * this["liubianxingH"] * 4 + this["liubianxingH"] * 3, (-3 * this["liubianxingA"] * 3) / 2)
             },
-            
+
             //第九行的位置信息
             {
-                count: 5, 
+                count: 5,
                 srcPos: cc.p(2 * this["liubianxingH"] * 4 + this["liubianxingH"] * 4, (-3 * this["liubianxingA"] * 4) / 2)
             },
-            
+
         ]
-        
+
         //要加的单位向量
         var addVec = cc.pMult(cc.pForAngle(240 * (2 * Math.PI / 360)), this["liubianxingH"] * 2)
-        
-        //偏移至源点0，0的向量
+
+        //偏移至源点0，0的向量  向量收缩   将弧度转换为一个标准化后的向量，返回坐标
         var pianyiTo0p0Vec = cc.pMult(cc.pForAngle(120 * (2 * Math.PI / 360)), this["liubianxingH"] * 2 * 4)
-        
-        
+
+
         var frameList = []
-        
+
         var fPosList = []
-         //一列列来生成
+        //一列列来生成
         for (var i = 0; i < posList.length; i++) {
             var count = posList[i].count//数量
             var oneSrcPos = cc.pAdd(posList[i].srcPos, pianyiTo0p0Vec)//起始位置
             var aimPos = cc.pAdd(srcPos, oneSrcPos)//一条的起始位置
 
             for (var j = 0; j < count; j++) {
+                //返回两个向量的和
                 var fPos = cc.pAdd(aimPos, cc.pMult(addVec, j))
                 fPosList.push(fPos)
             }
         }
-        
-        
+
+
         //初始化
-        for(var index = 0; index < fPosList.length; index++){
+        for (var index = 0; index < fPosList.length; index++) {
             var node = new cc.Node("frame")
+            //向节点添加一个指定类型的组件类，还可以通过传入脚本的名称来添加组件
             var sprite = node.addComponent(cc.Sprite)
+            //精灵的精灵帧
             sprite.spriteFrame = this["framePic"]
 
             node.x = fPosList[index].x
             node.y = fPosList[index].y
-            
-            
+
+
             //debug字用
             // var labelNode = new cc.Node("New Label")
             // var labelCp = node.addComponent(cc.Label)
@@ -393,9 +400,9 @@ cc.Class({
             // labelCp.fontSize = 18
             // labelNode.parent = node
 
-            
+
             node.parent = this.node
-            
+
             node.FKIndex = index
 
             //加边
@@ -407,8 +414,8 @@ cc.Class({
 
             frameList.push(node)
         }
-        
-        
+
+
         this.frameList = frameList
         this.posList = posList
         this.isDeleting = false//判断是否正在消除的依据
@@ -420,7 +427,6 @@ cc.Class({
         var node = cc.find('Canvas/highScore/scoreLabel')
         var label = node.getComponent(cc.Label)
         label.string = cc.sys.localStorage.getItem("score") || 0
-
 
 
         //cc.log(cc.myAssets)
