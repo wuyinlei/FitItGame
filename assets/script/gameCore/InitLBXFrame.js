@@ -1,3 +1,4 @@
+//
 const disList = [
     //一个方向
     [0, 1, 2, 3, 4],
@@ -103,7 +104,6 @@ cc.Class({
                 //cc.log(this.frameList[i].FKIndex)
                 haveFKIndexList.push(this.frameList[i].FKIndex) ;//如果有就存储
             }
-
         }
 
         //重新排序
@@ -126,8 +126,8 @@ cc.Class({
                 //cc.log("intersectAry 和 oneXCList是否相等：", isXC)
                 if (isXC) {
                     cc.log("消！！");
-                    xcList.push(oneXCList);
-
+                    xcList.push(oneXCList); //如果是该消除的  那么久添加到消除的列表中
+                    //播放音频
                     cc.audioEngine.playEffect(this.xiaochuSound);
                 }
             }
@@ -136,30 +136,33 @@ cc.Class({
         //cc.log("消除表现！！")
 
         var actionAry = [];
-        var self = this;
+        var self = this; //当前对象
         //消除
         var count = 0;
-        for (var i = 0; i < xcList.length; i++) {
+        for (var i = 0; i < xcList.length; i++) { //需要消除的列表循环
 
-            var oneList = xcList[i];
+            var oneList = xcList[i]; //第 i 个需要消除的方块
             for (var j = 0; j < oneList.length; j++) {
-                var xIndex = oneList[j];
+                var xIndex = oneList[j]; //需要消除的某个点
 
-                actionAry.push(cc.callFunc(function () {
+                actionAry.push(
+                    //执行回调函数
+                    cc.callFunc(function () {
                     var xIndex = arguments[1][0];
                     var count = arguments[1][1];
-                    var effNode = cc.instantiate(this.boomEffPrefab);
-                    this.frameList[xIndex].addChild(effNode);
+                    var effNode = cc.instantiate(this.boomEffPrefab);  //新创建一个预制资源
+                    this.frameList[xIndex].addChild(effNode);//添加该预制资源
 
                     //加分飘字
-                    var tipNode = cc.instantiate(this.tipPrefab);
-                    var label = tipNode.getComponent(cc.Label);
-                    label.string = "+" + this.getAddScoreCal(count);
-                    this.frameList[xIndex].addChild(tipNode);
+                    var tipNode = cc.instantiate(this.tipPrefab);//提示预制资源
+                    var label = tipNode.getComponent(cc.Label);//提示预制资源的添加label
+                    label.string = "+" + this.getAddScoreCal(count);//获取到得分
+                    this.frameList[xIndex].addChild(tipNode); //添加分数为当前的  是在当前消除的方块(单一方块)上面的分数提示
                 }, this, [xIndex, count]))
 
 
-                actionAry.push(cc.callFunc(function () {
+                actionAry.push(
+                    cc.callFunc(function () {
                     var xIndex = arguments[1];
                     this.frameList[xIndex].isHaveFK = null;
 
