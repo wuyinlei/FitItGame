@@ -25,8 +25,8 @@ cc.Class({
             cc.scaleTo(0.2,0),
             cc.callFunc(function(){
                 cc.log("开始游戏");
-                cc.director.loadScene("gameScore");
-                this.node.destory();
+                cc.director.loadScene("gameScene");
+                this.node.destroy();
             },this)
         )
 

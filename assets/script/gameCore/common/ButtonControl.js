@@ -24,7 +24,7 @@ cc.Class({
     },
 
     onClick: function(){
-        cc.audioEngine.palyEffect(this["音效"]);
+        cc.audioEngine.playEffect(this["音效"]);
     },
 
     // called every frame, uncomment this function to activate update callback
